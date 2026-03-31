@@ -1,0 +1,55 @@
+name: CI Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install & Run Tests
+        shell: bash
+        run: |
+          set -e
+
+          echo "Checking for project type..."
+
+          if [ -f package.json ]; then
+            echo "Detected Node.js project — installing and running npm test"
+            npm ci || npm install
+            npm test
+          fi
+
+          if [ -f requirements.txt ]; then
+            echo "Detected Python requirements.txt — installing and running pytest"
+            python -m pip install --upgrade pip
+            python -m pip install -r requirements.txt
+            pytest
+          fi
+
+          if [ -f pyproject.toml ]; then
+            echo "Detected Python pyproject.toml — installing package and running pytest"
+            python -m pip install --upgrade pip
+            python -m pip install .
+            pytest
+          fi
+
+          if [ ! -f package.json ] && [ ! -f requirements.txt ] && [ ! -f pyproject.toml ]; then
+            echo "No recognized test files found (package.json, requirements.txt, pyproject.toml)."
+            echo "If this repository uses a different test command, update .github/workflows/ci-test.yml accordingly."
+            exit 1
+          fi
