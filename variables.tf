@@ -1,35 +1,23 @@
 variable "image_name" {
-  description = "Name and tag for the Docker image to be built."
+  description = "Name for the Docker image."
   type        = string
-  default     = "my-static-web-app:latest"
+  default     = "static-web-app"
 }
 
-variable "container_name" {
-  description = "Name for the Docker container."
+variable "image_tag" {
+  description = "Tag for the Docker image."
   type        = string
-  default     = "static-web-app-container"
+  default     = "latest"
 }
 
 variable "container_port" {
-  description = "The port exposed by the application inside the Docker container (as per Dockerfile EXPOSE)."
+  description = "The port exposed internally by the Docker container, as specified in the Dockerfile."
   type        = number
   default     = 8080
 }
 
 variable "host_port" {
-  description = "The port on the host machine to map to the container's exposed port."
+  description = "The port on the host machine to map to the container's internal port."
   type        = number
-  default     = 8080 # Default to the same as container port, can be overridden
-}
-
-variable "dockerfile_path" {
-  description = "Path to the Dockerfile relative to the build context."
-  type        = string
-  default     = "Dockerfile"
-}
-
-variable "build_context_path" {
-  description = "Path to the Docker image build context (where Dockerfile and 'dist' directory reside), relative to the Terraform root module."
-  type        = string
-  default     = "."
+  default     = 8080 # Default to the same as container_port for simplicity
 }
