@@ -1,4 +1,4 @@
-name: CI Build, Test, and Lint
+name: CI - Build, Test & Push Docker
 
 on:
   push:
@@ -7,74 +7,53 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: # Allows manual triggering
+
+env:
+  NODE_VERSION: '18' # Matches Dockerfile base image
 
 jobs:
-  build-test-lint:
+  build-test-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Needed for pushing to GitHub Container Registry
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup environment (Placeholder)
-        # Replace this with specific setup for your project, e.g., actions/setup-node, actions/setup-java, actions/setup-python
-        run: |
-          echo "Detecting project type and setting up appropriate environment..."
-          echo "Example: If Node.js -> uses: actions/setup-node@v4 with: node-version: '20'"
-          echo "Example: If Java -> uses: actions/setup-java@v4 with: java-version: '17'"
-          echo "Example: If Python -> uses: actions/setup-python@v5 with: python-version: '3.x'"
-          # Add actual setup commands here, e.g.:
-          # uses: actions/setup-node@v4
-          # with:
-          #   node-version: '20'
-
-      - name: Install dependencies (Placeholder)
-        # Replace this with your project's dependency installation command
-        run: |
-          echo "Installing project dependencies..."
-          echo "Example: npm ci"
-          echo "Example: pip install -r requirements.txt"
-          echo "Example: mvn clean install -DskipTests"
-          # Add actual install command here, e.g.:
-          # npm ci
-
-      - name: Run linting (Placeholder)
-        # Replace this with your project's linting command
-        run: |
-          echo "Running linting checks..."
-          echo "Example: npm run lint"
-          # Add actual lint command here, e.g.:
-          # npm run lint
-
-      - name: Run tests (Placeholder)
-        # Replace this with your project's test command
-        run: |
-          echo "Running unit and integration tests..."
-          echo "Example: npm test"
-          echo "Example: pytest"
-          echo "Example: mvn test"
-          # Add actual test command here, e.g.:
-          # npm test
-
-      - name: Build project (Placeholder - if applicable)
-        # Replace this with your project's build command if it produces deployable artifacts
-        # If no build step, you can remove this
-        run: |
-          echo "Building project artifacts..."
-          echo "Example: npm run build"
-          echo "Example: mvn package"
-          echo "Example: python setup.py sdist bdist_wheel"
-          # Add actual build command here, e.g.:
-          # npm run build
-          # mkdir -p dist # Ensure dist directory exists for artifact upload
-          # cp -r build/* dist/ # Copy build output to dist/
-
-      - name: Upload build artifact
-        # Replace 'dist' with the actual path to your build output directory
-        # If no build step, remove this or upload test reports/other artifacts
-        uses: actions/upload-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: project-build-artifact
-          path: ./dist # Assuming build output goes into a 'dist' folder
-          retention-days: 7
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        # Assumes 'package.json' has a 'test' script. Adjust if your test command is different.
+        run: npm test
+
+      - name: Build application
+        # This step creates the 'dist' directory as expected by the Dockerfile.
+        # Adjust if your build command is different (e.g., 'yarn build', 'webpack').
+        run: npm run build
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
