@@ -1,126 +1,102 @@
-```json
-{
-  "fixedWorkflow": "```yaml
-name: CD Deploy with Terraform
+name: Terraform CD - Deploy to Cloud
 
 on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker Image Tag to deploy (e.g., ghcr.io/org/repo:sha)'
+        required: true
+        default: 'latest'
+  # Triggered when the CI workflow successfully completes on the main branch
   workflow_run:
-    workflows: [\"CI/CD Build & Push Docker\"]
+    workflows: ["Node.js CI - Build and Push Docker Image"]
     types:
       - completed
-    # Removed branches filter from on: workflow_run.
-    # The branch check is now handled explicitly at the job level for better debuggability and clarity.
-    # branches:
-    #   - main
+    branches:
+      - main
 
 env:
-  TF_WORKING_DIR: . # Assuming main.tf, variables.tf are at root
+  TF_WORKING_DIR: .
+  AWS_REGION: us-east-1 # Example region, update as needed
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  deploy:
-    # This job runs only if the 'CI/CD Build & Push Docker' workflow completed successfully
-    # AND if that workflow ran on the 'main' branch.
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+  terraform-apply:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # Required for AWS OIDC authentication
-      actions: read # Required to list/download artifacts from other workflow runs
+    # Only run if the CI workflow completed successfully, or if manually dispatched/pushed
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Docker Image Tag artifact from CI workflow
-        uses: actions/github-script@v6
-        id: get_image_tag_artifact
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const run_id = github.event.workflow_run.id;
-
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner,
-              repo,
-              run_id,
-            });
-
-            // Find the artifact named 'docker_image_tag'
-            const matchArtifact = artifacts.data.artifacts.filter((artifact) => artifact.name == \"docker_image_tag\")[0];
-
-            if (!matchArtifact) {
-              core.setFailed(\"No 'docker_image_tag' artifact found from the CI workflow. Deployment aborted.\");
-              return;
-            }
-
-            const download = await github.rest.actions.downloadArtifact({
-              owner,
-              repo,
-              artifact_id: matchArtifact.id,
-              archive_format: 'zip',
-            });
-
-            // Save the zip file
-            const fs = require('fs');
-            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/docker_image_tag.zip`, Buffer.from(download.data));
-            core.setOutput('artifact_downloaded', 'true');
-            console.log(\"Downloaded artifact to docker_image_tag.zip\");
-          result-encoding: string
-
-      - name: Unzip Docker Image Tag artifact
-        if: steps.get_image_tag_artifact.outputs.artifact_downloaded == 'true'
-        run: |
-          unzip docker_image_tag.zip -d extracted_artifact
-          # The artifact contains a file named 'docker_image_tag.txt' with the full image tag
-          FULL_DOCKER_IMAGE_TAG=$(cat extracted_artifact/docker_image_tag.txt)
-          echo \"DOCKER_IMAGE_TAG=$FULL_DOCKER_IMAGE_TAG\" >> \"$GITHUB_ENV\"
-          echo \"Extracted Docker Image Tag: $FULL_DOCKER_IMAGE_TAG\"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole # IMPORTANT: Replace with your IAM Role ARN for OIDC
-          aws-region: us-east-1 # IMPORTANT: Replace with your desired AWS region
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.x # Pinned to a specific minor version for stability
+          terraform_version: 1.x.x # Specify desired Terraform version
+
+      - name: Determine Docker Image Tag
+        id: get_image_tag
+        run: |
+          IMAGE_REGISTRY_PATH="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          TAG=""
+
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.image_tag }}"
+            if [ "$TAG" == "latest" ]; then
+              echo "Deploying 'latest' tag as specified in manual dispatch."
+            else
+              echo "Deploying specific tag from manual dispatch: $TAG"
+            fi
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            TAG="${{ github.sha }}"
+            echo "Deploying commit SHA from push event: $TAG"
+          elif [ "${{ github.event_name }}" == "workflow_run" ]; then
+            # The workflow_run event provides details about the completed workflow
+            # We want the SHA from the *head commit* of the workflow that triggered us.
+            TAG=$(jq -r '.workflow_run.head_sha' "${GITHUB_EVENT_PATH}")
+            echo "Deploying commit SHA from completed CI workflow: $TAG"
+          fi
+
+          if [ -z "$TAG" ]; then
+            echo "Error: Could not determine image tag."
+            exit 1
+          fi
+
+          FULL_IMAGE_TAG="$IMAGE_REGISTRY_PATH:$TAG"
+          echo "FULL_IMAGE_TAG=$FULL_IMAGE_TAG" >> $GITHUB_ENV
+          echo "Determined image tag for deployment: $FULL_IMAGE_TAG"
 
       - name: Terraform Init
         id: init
-        run: terraform init
-        working-directory: ${{ env.TF_WORKING_DIR }}
-
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate
+        run: terraform init -backend-config="region=${{ env.AWS_REGION }}" -backend-config="bucket=my-terraform-state-bucket" -backend-config="key=path/to/my-app.tfstate" # Replace with your S3 backend details
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
         id: plan
-        # Pass the extracted Docker image tag as a Terraform variable
-        run: terraform plan -no-color -var=\"image_tag=${{ env.DOCKER_IMAGE_TAG }}\" -out=\"tfplan\"
+        run: terraform plan -input=false -var="docker_image=${{ env.FULL_IMAGE_TAG }}"
         working-directory: ${{ env.TF_WORKING_DIR }}
-        # Removed redundant AWS credentials. 'configure-aws-credentials' action handles this.
-        # env:
-        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #   AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Terraform Apply
         id: apply
-        # Apply only if the triggering workflow ran on the main branch.
-        # This is already covered by the job's 'if' condition, but kept for explicit control.
-        if: github.event.workflow_run.head_branch == 'main'
-        run: terraform apply -auto-approve \"tfplan\"
+        run: terraform apply -auto-approve -input=false -var="docker_image=${{ env.FULL_IMAGE_TAG }}"
         working-directory: ${{ env.TF_WORKING_DIR }}
-        # Removed redundant AWS credentials. 'configure-aws-credentials' action handles this.
-        # env:
-        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #   AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-```",
-  "explanation": "The error log `Auto-Detected via Orchestrator` is extremely generic and typically indicates a fundamental issue with the workflow's trigger (`on:` event) or its initial parsing by GitHub Actions, preventing it from even starting correctly or providing more detailed logs. For `workflow_run` events, subtle misconfigurations of the `branches` filter can sometimes lead to this kind of uninformative error.\n\nHere's a breakdown of the fixes:\n\n1.  **Moved `branches` filter from `on: workflow_run` to job-level `if` condition**: This is the primary fix addressing the vague orchestrator error. While `branches` is a valid filter for `workflow_run`, it can sometimes prevent the workflow from being initiated or tracked in a way that generates clear error messages if the condition isn't met perfectly. By removing `branches: - main` from the `on:` trigger and adding `&& github.event.workflow_run.head_branch == 'main'` to the `deploy` job's `if` condition, the workflow will now always trigger when the parent workflow (`CI/CD Build & Push Docker`) completes. However, the `deploy` job itself will only run (or be explicitly marked as 'skipped' in the UI) if the triggering workflow ran on the `main` branch and completed successfully. This provides more visibility and makes debugging easier than a silent failure or cryptic orchestrator message.\n\n2.  **Removed redundant AWS credentials from Terraform `env` blocks**: The `aws-actions/configure-aws-credentials@v4` action, when used for OIDC, automatically sets temporary `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` as environment variables. Explicitly setting these again in the `env` blocks of the `Terraform Plan` and `Terraform Apply` steps is redundant and potentially problematic. If the secrets were empty or incorrectly configured, they could override the OIDC-generated temporary credentials, leading to authentication issues. Removing these `env` entries ensures OIDC authentication works as intended.\n\n3.  **Refined Terraform version specification**: Changed `terraform_version: 1.x.x` to `1.6.x` (or a similar specific minor version). While `1.x.x` instructs the `setup-terraform` action to use the latest patch of the latest minor version for Terraform 1, pinning to a specific minor version (e.g., `1.6.x` for the latest patch in the `1.6` series) offers better stability and predictability in a CD pipeline, preventing unexpected behavior if a new minor version introduces breaking changes or deprecations.\n\n4.  **Simplified `Terraform Apply` step `if` condition**: The original condition `if: github.ref == 'refs/heads/main' && github.event.workflow_run.head_branch == 'main'` was slightly redundant. With the job-level `if` now ensuring `github.event.workflow_run.head_branch == 'main'`, the `github.ref` check for the current workflow run's branch is also implicitly handled (as `github.ref` in `workflow_run` context refers to the branch of the triggering workflow). The step condition was simplified to `if: github.event.workflow_run.head_branch == 'main'` for clarity and to retain an explicit safeguard at the apply step, even if the job's `if` provides the primary gatekeeping."
-}
-```
+
+      - name: Get Terraform Outputs
+        id: output
+        run: terraform output -json > tf_outputs.json
+        working-directory: ${{ env.TF_WORKING_DIR }}
