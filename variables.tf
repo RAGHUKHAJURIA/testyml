@@ -1,24 +1,35 @@
-variable "aws_region" {
-  description = "The AWS region to deploy regional resources into. Note: ACM certificates for CloudFront must be in us-east-1."
+variable "docker_image_name" {
+  description = "The name and tag for the Docker image (e.g., my-app:latest)."
   type        = string
-  default     = "us-east-1"
+  default     = "my-application:latest"
 }
 
-variable "domain_name" {
-  description = "The primary domain name for the website (e.g., example.com)."
+variable "docker_container_name" {
+  description = "The name for the Docker container."
   type        = string
-  validation {
-    condition     = length(regex("^[a-zA-Z0-9.-]+\\.([a-zA-Z]{2,})$", var.domain_name)) > 0
-    error_message = "The domain_name must be a valid domain format, e.g., 'example.com'."
-  }
+  default     = "my-application-container"
 }
 
-variable "project_name" {
-  description = "A short identifier for the project, used for naming resources and tagging. Must be lowercase and alphanumeric (dashes allowed)."
+variable "container_port" {
+  description = "The internal port on which the application inside the container listens."
+  type        = number
+  default     = 8080 # Common default for web applications
+}
+
+variable "host_port" {
+  description = "The port on the host machine to map to the container's internal port."
+  type        = number
+  default     = 8080 # Example: map to the same port on the host
+}
+
+variable "dockerfile_context" {
+  description = "The path to the build context directory for the Docker image. This directory should contain the Dockerfile and all files needed for the build (e.g., the './dist' folder created by CI). Relative to where 'terraform apply' is run."
   type        = string
-  default     = "mywebapp"
-  validation {
-    condition     = length(regex("^[a-z0-9-]+$", var.project_name)) > 0
-    error_message = "The project_name must be lowercase alphanumeric and may contain hyphens."
-  }
+  default     = "."
+}
+
+variable "dockerfile_name" {
+  description = "The name of the Dockerfile within the 'dockerfile_context'."
+  type        = string
+  default     = "Dockerfile"
 }
