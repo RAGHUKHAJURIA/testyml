@@ -9,29 +9,25 @@ terraform {
 
 provider "docker" {}
 
-# Resource to build the Docker image
+# Resource for building the Docker image
 resource "docker_image" "app_image" {
   count = var.mode == "image_only" || var.mode == "full" ? 1 : 0
 
-  name = var.image_tag
+  name = "${var.image_name}:latest" # Use a stable tag, rebuilds are handled by 'triggers' block
 
   build {
-    context    = var.build_context_path
+    context    = path.cwd # Dockerfile and build_context_path (dist) are relative to current working directory
     dockerfile = var.dockerfile_path
-    tag        = [var.image_tag]
   }
 
-  # Triggers to rebuild the image if Dockerfile or 'dist' directory contents change.
-  # 'fileset' recursively finds all files in 'dist' and their MD5 hashes are joined
-  # to form a single trigger value. This ensures that any change within 'dist' or
-  # to the Dockerfile itself will cause a rebuild.
+  # Trigger a rebuild if the Dockerfile or the build context (dist directory) contents change
   triggers = {
-    dockerfile_hash = filemd5("${var.build_context_path}/${var.dockerfile_path}")
-    dist_content_hash = join("-", [for f in fileset("${var.build_context_path}/dist", "**") : filemd5("${var.build_context_path}/dist/${f}")])
+    dockerfile_hash    = filemd5(var.dockerfile_path)
+    build_context_hash = filemd5(pathexpand(var.build_context_path))
   }
 }
 
-# Resource to run the Docker container
+# Resource for running the Docker container
 resource "docker_container" "app_container" {
   count = var.mode == "container_only" || var.mode == "full" ? 1 : 0
 
@@ -43,17 +39,7 @@ resource "docker_container" "app_container" {
     external = var.host_port
   }
 
-  # Respects the CMD in the Dockerfile: CMD ["http-server", "/app/html", "-p", "8080"]
-  # No explicit command needed unless overriding.
-
-  # Link the container to the image build, if the image is built by Terraform.
-  # The depends_on ensures the image is ready before the container attempts to use it.
-  dynamic "depends_on" {
-    for_each = var.mode == "full" ? [1] : []
-    content {
-      value = [docker_image.app_image[0].id]
-    }
-  }
-
-  restart = "always"
+  # The dependency on docker_image.app_image is implicitly handled by referencing its name
+  # in the `image` attribute. Terraform ensures the image is available before creating the container.
+  # No explicit depends_on is strictly needed here and avoids issues with count = 0 resources.
 }
