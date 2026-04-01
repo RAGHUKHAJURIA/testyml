@@ -1,6 +1,7 @@
-# (Keep your existing content in variables.tf)
+# Existing variables from the original file (if any) go here
+# ...
 
-variable "image_tag" {
-  description = "Docker image tag to deploy (e.g., ghcr.io/org/repo:sha-hash or ghcr.io/org/repo:latest)."
+variable "docker_image" {
+  description = "Docker image to deploy (e.g., ghcr.io/user/repo:tag)"
   type        = string
 }
