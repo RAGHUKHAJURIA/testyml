@@ -1,4 +1,4 @@
-name: CI - Build, Test & Push Docker
+name: CI/CD Build & Push Docker
 
 on:
   push:
@@ -9,35 +9,36 @@ on:
       - main
 
 env:
-  NODE_VERSION: '18' # Matches Dockerfile base image
+  IMAGE_NAME: ${{ github.repository }} # e.g., octocat/Spoon-Knife
 
 jobs:
-  build-test-push:
+  build_and_push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Needed for pushing to GitHub Container Registry
+      packages: write # Required to push to GHCR
+      id-token: write # Required for AWS OIDC authentication in some setups, good practice
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 18
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        # Assumes 'package.json' has a 'test' script. Adjust if your test command is different.
-        run: npm test
+      - name: Run lint
+        run: npm run lint # Assumes 'lint' script in package.json
+
+      - name: Run tests
+        run: npm run test # Assumes 'test' script in package.json
 
       - name: Build application
-        # This step creates the 'dist' directory as expected by the Dockerfile.
-        # Adjust if your build command is different (e.g., 'yarn build', 'webpack').
-        run: npm run build
+        run: npm run build # Assumes 'build' script creates `./dist`
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -46,14 +47,51 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set dynamic image tag and full image name
+        id: set_image_tag
+        run: |
+          # Determine the primary tag for the Docker image
+          TAG=""
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TAG="${{ github.sha }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+            TAG="${SHORT_SHA}" # Primary tag for CD
+          else
+            TAG="${{ github.sha }}"
+          fi
+
+          # Define all tags for the Docker build/push action
+          ALL_DOCKER_TAGS="ghcr.io/${{ env.IMAGE_NAME }}:${TAG}"
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ALL_DOCKER_TAGS="${ALL_DOCKER_TAGS},ghcr.io/${{ env.IMAGE_NAME }}:latest"
+          fi
+
+          # The full image name with the primary tag, for passing to CD
+          FULL_DOCKER_IMAGE_WITH_TAG="ghcr.io/${{ env.IMAGE_NAME }}:${TAG}"
+
+          echo "ALL_DOCKER_TAGS=${ALL_DOCKER_TAGS}" >> "$GITHUB_ENV"
+          echo "FULL_DOCKER_IMAGE_WITH_TAG=${FULL_DOCKER_IMAGE_WITH_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-and-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ env.ALL_DOCKER_TAGS }}
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.created=${{ github.event.repository.created_at }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Export Docker Image Tag for CD
+        # Output the full image name with its tag to a file, then upload as an artifact
+        # This artifact will be downloaded by the CD workflow to get the exact image to deploy.
+        run: echo "${{ steps.set_image_tag.outputs.FULL_DOCKER_IMAGE_WITH_TAG }}" > docker_image_tag.txt
+
+      - name: Upload Docker Image Tag as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_image_tag
+          path: docker_image_tag.txt
+          retention-days: 1 # Keep for a short period, just until CD workflow runs
