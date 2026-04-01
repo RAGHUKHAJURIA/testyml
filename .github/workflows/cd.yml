@@ -1,48 +1,58 @@
-name: CD Deployment
+name: CD - Deploy with Terraform
 
 on:
   workflow_run:
-    workflows: ["CI Build, Test, and Lint"] # Name of the CI workflow
+    workflows: ["CI - Build, Test & Push Docker"] # Name of the CI workflow
     types:
       - completed
     branches:
       - main
-  workflow_dispatch: # Allows manual triggering
 
 jobs:
   deploy:
+    # Only run if the triggering CI workflow was successful
+    if: github.event.workflow_run.conclusion == 'success'
+
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      id-token: write # Needed for AWS OIDC authentication
 
     steps:
       - name: Checkout repository
-        # Needed if deployment scripts are within the repository
         uses: actions/checkout@v4
-
-      - name: Download build artifact
-        # This step downloads the artifact uploaded by the CI workflow
-        uses: actions/download-artifact@v4
+        # Checkout the head_sha of the workflow_run that triggered this CD,
+        # to ensure we have the correct Terraform files for that specific commit.
         with:
-          name: project-build-artifact
-          path: ./dist # Path where the artifact will be extracted
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Deploy to environment (Placeholder)
-        # Replace this with your actual deployment steps
-        run: |
-          echo "Deploying project artifacts to target environment..."
-          echo "Artifacts are available in the ./dist directory."
-          echo "Example: Deploy to AWS S3, Azure App Service, Kubernetes, etc."
-          # Add actual deployment commands here, e.g.:
-          # aws s3 sync ./dist s3://your-bucket-name --delete
-          # az webapp deploy --resource-group YOUR_RG --name YOUR_APP --src-path ./dist
-          # kubectl apply -f ./dist/kubernetes-manifests/
-          #
-          # Example using environment variables for secrets:
-          # echo "Deploying with access key ${{ secrets.AWS_ACCESS_KEY_ID }}"
-          # echo "Deploying to stage ${{ vars.DEPLOYMENT_STAGE }}"
-          #
-          # For a more complex deployment, consider breaking this into multiple jobs
-          # for different environments (e.g., 'deploy-staging', 'deploy-production')
-          # with appropriate environment protection rules and approvals.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }} # e.g., arn:aws:iam::123456789012:role/github-actions-deploy-role
+          aws-region: ${{ secrets.AWS_REGION }} # e.g., us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.x.x # Specify your desired Terraform version (e.g., '1.4.6')
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        # Pass the Docker image tag as a Terraform variable.
+        # The image tag is derived from the SHA of the commit that triggered the CI workflow.
+        run: terraform plan -out=tfplan -var "image_tag=ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}"
+
+      - name: Terraform Apply
+        id: apply
+        # Apply only if the workflow is on the main branch and the plan was successful.
+        if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success'
+        run: terraform apply -auto-approve tfplan
