@@ -1,58 +1,114 @@
-name: CD - Deploy with Terraform
+name: CD Deploy with Terraform
 
 on:
   workflow_run:
-    workflows: ["CI - Build, Test & Push Docker"] # Name of the CI workflow
+    workflows: ["CI/CD Build & Push Docker"]
     types:
       - completed
     branches:
-      - main
+      - main # Only deploy main branch pushes
+
+env:
+  TF_WORKING_DIR: . # Assuming main.tf, variables.tf are at root
 
 jobs:
   deploy:
-    # Only run if the triggering CI workflow was successful
+    # This job runs only if the 'CI/CD Build & Push Docker' workflow completed successfully
     if: github.event.workflow_run.conclusion == 'success'
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # Needed for AWS OIDC authentication
+      id-token: write # Required for AWS OIDC authentication
+      actions: read # Required to list/download artifacts from other workflow runs
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # Checkout the head_sha of the workflow_run that triggered this CD,
-        # to ensure we have the correct Terraform files for that specific commit.
+
+      - name: Download Docker Image Tag artifact from CI workflow
+        uses: actions/github-script@v6
+        id: get_image_tag_artifact
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          script: |
+            const { owner, repo } = context.repo;
+            const run_id = github.event.workflow_run.id;
+
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner,
+              repo,
+              run_id,
+            });
+
+            // Find the artifact named 'docker_image_tag'
+            const matchArtifact = artifacts.data.artifacts.filter((artifact) => artifact.name == "docker_image_tag")[0];
+
+            if (!matchArtifact) {
+              core.setFailed("No 'docker_image_tag' artifact found from the CI workflow. Deployment aborted.");
+              return;
+            }
+
+            const download = await github.rest.actions.downloadArtifact({
+              owner,
+              repo,
+              artifact_id: matchArtifact.id,
+              archive_format: 'zip',
+            });
+
+            // Save the zip file
+            const fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/docker_image_tag.zip`, Buffer.from(download.data));
+            core.setOutput('artifact_downloaded', 'true');
+            console.log("Downloaded artifact to docker_image_tag.zip");
+          result-encoding: string
+
+      - name: Unzip Docker Image Tag artifact
+        if: steps.get_image_tag_artifact.outputs.artifact_downloaded == 'true'
+        run: |
+          unzip docker_image_tag.zip -d extracted_artifact
+          # The artifact contains a file named 'docker_image_tag.txt' with the full image tag
+          FULL_DOCKER_IMAGE_TAG=$(cat extracted_artifact/docker_image_tag.txt)
+          echo "DOCKER_IMAGE_TAG=$FULL_DOCKER_IMAGE_TAG" >> "$GITHUB_ENV"
+          echo "Extracted Docker Image Tag: $FULL_DOCKER_IMAGE_TAG"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }} # e.g., arn:aws:iam::123456789012:role/github-actions-deploy-role
-          aws-region: ${{ secrets.AWS_REGION }} # e.g., us-east-1
+          role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsDeployRole # IMPORTANT: Replace with your IAM Role ARN for OIDC
+          aws-region: us-east-1 # IMPORTANT: Replace with your desired AWS region
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.x.x # Specify your desired Terraform version (e.g., '1.4.6')
+          terraform_version: 1.x.x # Use a specific version, e.g., 1.5.7
 
       - name: Terraform Init
         id: init
         run: terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Validate
         id: validate
         run: terraform validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
         id: plan
-        # Pass the Docker image tag as a Terraform variable.
-        # The image tag is derived from the SHA of the commit that triggered the CI workflow.
-        run: terraform plan -out=tfplan -var "image_tag=ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}"
+        # Pass the extracted Docker image tag as a Terraform variable
+        run: terraform plan -no-color -var="image_tag=${{ env.DOCKER_IMAGE_TAG }}" -out="tfplan"
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          # Optionally pass AWS credentials if not using OIDC (less secure)
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Terraform Apply
         id: apply
-        # Apply only if the workflow is on the main branch and the plan was successful.
-        if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success'
-        run: terraform apply -auto-approve tfplan
+        # Apply only on pushes to the main branch
+        if: github.ref == 'refs/heads/main' && github.event.workflow_run.head_branch == 'main'
+        run: terraform apply -auto-approve "tfplan"
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
