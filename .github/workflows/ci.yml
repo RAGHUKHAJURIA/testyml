@@ -1,4 +1,4 @@
-name: CI
+name: CI Build, Test, and Lint
 
 on:
   push:
@@ -7,68 +7,74 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  lint:
-    name: Lint
+  build-test-lint:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment
-        # Replace with appropriate setup, e.g., Node.js, Python, Java
-        run: | # For Node.js: 'npm install'
-             # For Python: 'pip install -r requirements.txt'
-             # For Java: 'mvn install'
-             echo "Install dependencies here if needed"
+      - name: Setup environment (Placeholder)
+        # Replace this with specific setup for your project, e.g., actions/setup-node, actions/setup-java, actions/setup-python
+        run: |
+          echo "Detecting project type and setting up appropriate environment..."
+          echo "Example: If Node.js -> uses: actions/setup-node@v4 with: node-version: '20'"
+          echo "Example: If Java -> uses: actions/setup-java@v4 with: java-version: '17'"
+          echo "Example: If Python -> uses: actions/setup-python@v5 with: python-version: '3.x'"
+          # Add actual setup commands here, e.g.:
+          # uses: actions/setup-node@v4
+          # with:
+          #   node-version: '20'
 
-      - name: Run Linter
-        # Replace with actual linting command, e.g., 'npm run lint', 'pylint .', 'golangci-lint run'
-        run: echo "Run linting commands here (e.g., npm run lint, pylint, golangci-lint)"
+      - name: Install dependencies (Placeholder)
+        # Replace this with your project's dependency installation command
+        run: |
+          echo "Installing project dependencies..."
+          echo "Example: npm ci"
+          echo "Example: pip install -r requirements.txt"
+          echo "Example: mvn clean install -DskipTests"
+          # Add actual install command here, e.g.:
+          # npm ci
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: lint # Ensure linting passes before running tests
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Run linting (Placeholder)
+        # Replace this with your project's linting command
+        run: |
+          echo "Running linting checks..."
+          echo "Example: npm run lint"
+          # Add actual lint command here, e.g.:
+          # npm run lint
 
-      - name: Setup Environment
-        # Replace with appropriate setup, e.g., Node.js, Python, Java
-        run: | # For Node.js: 'npm install'
-             # For Python: 'pip install -r requirements.txt'
-             # For Java: 'mvn install'
-             echo "Install dependencies here if needed"
+      - name: Run tests (Placeholder)
+        # Replace this with your project's test command
+        run: |
+          echo "Running unit and integration tests..."
+          echo "Example: npm test"
+          echo "Example: pytest"
+          echo "Example: mvn test"
+          # Add actual test command here, e.g.:
+          # npm test
 
-      - name: Run Tests
-        # Replace with actual test command, e.g., 'npm test', 'pytest', 'go test ./...'
-        run: echo "Run unit/integration tests here (e.g., npm test, pytest, go test)"
+      - name: Build project (Placeholder - if applicable)
+        # Replace this with your project's build command if it produces deployable artifacts
+        # If no build step, you can remove this
+        run: |
+          echo "Building project artifacts..."
+          echo "Example: npm run build"
+          echo "Example: mvn package"
+          echo "Example: python setup.py sdist bdist_wheel"
+          # Add actual build command here, e.g.:
+          # npm run build
+          # mkdir -p dist # Ensure dist directory exists for artifact upload
+          # cp -r build/* dist/ # Copy build output to dist/
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: test # Ensure tests pass before building
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Environment
-        # Replace with appropriate setup, e.g., Node.js, Python, Java
-        run: | # For Node.js: 'npm install'
-             # For Python: 'pip install -r requirements.txt'
-             # For Java: 'mvn install'
-             echo "Install dependencies here if needed"
-
-      - name: Build Project
-        # Replace with actual build command, e.g., 'npm run build', 'mvn clean package', 'go build ./'
-        run: | # This step should output build artifacts.
-             echo "Run build commands here (e.g., npm run build, mvn clean package, go build)"
-      
-      # Example: Upload build artifacts if applicable
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: project-build-artifact
-      #     path: ./dist # Example path for build output
+      - name: Upload build artifact
+        # Replace 'dist' with the actual path to your build output directory
+        # If no build step, remove this or upload test reports/other artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-build-artifact
+          path: ./dist # Assuming build output goes into a 'dist' folder
+          retention-days: 7
