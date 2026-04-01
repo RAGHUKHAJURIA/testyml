@@ -1,0 +1,52 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: 
+      name: staging
+      url: https://staging.example.com # Replace with your staging URL
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Placeholder for deployment to staging
+      # This might involve:
+      # - Setting up cloud provider CLI (AWS, GCP, Azure, etc.)
+      # - Logging in to a container registry
+      # - Building and pushing Docker images
+      # - Deploying to a Kubernetes cluster, ECS, EC2, Azure App Service, Vercel, Netlify, etc.
+      - name: Deploy to Staging Environment
+        run: | 
+          echo "Deploying to staging..."
+          # Add your staging deployment commands here
+          # Example: 'aws s3 sync ./build s3://staging-bucket'
+          # Example: 'kubectl apply -f k8s/staging.yaml'
+          echo "Successfully deployed to staging!"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging # Ensure staging deployment is successful first
+    environment:
+      name: production
+      url: https://www.example.com # Replace with your production URL
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Placeholder for deployment to production
+      # This might involve similar steps as staging, but targeting production resources
+      - name: Deploy to Production Environment
+        run: |
+          echo "Deploying to production..."
+          # Add your production deployment commands here
+          # Example: 'aws s3 sync ./build s3://production-bucket'
+          # Example: 'kubectl apply -f k8s/production.yaml'
+          echo "Successfully deployed to production!"
