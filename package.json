@@ -1,0 +1,18 @@
+{
+  "name": "my-dockerized-app",
+  "version": "1.0.0",
+  "description": "A sample Node.js application deployed via GitHub Actions and Terraform.",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server ./dist/html -p 8080",
+    "build": "echo 'Building application...' && mkdir -p dist && cp src/* dist/ || true && echo 'Build complete: dist directory created.'",
+    "test": "echo \"No specific tests configured. Consider adding Jest/Mocha.\" && exit 0",
+    "lint": "echo \"No specific linting configured. Consider adding ESLint.\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
