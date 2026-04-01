@@ -7,62 +7,53 @@ terraform {
   }
 }
 
-provider "docker" {
-  # For Linux/macOS, this is the default.
-  # For Windows (WSL2), it typically works as is.
-  # For Windows (Docker Desktop native), you might use "npipe:////./pipe/docker_engine"
-  # For remote Docker daemon, specify "tcp://hostname:port"
-  host = "unix:///var/run/docker.sock"
-}
+provider "docker" {}
 
-# Docker Image Resource
-# Conditionally builds the Docker image based on the 'mode' variable.
+# Resource to build the Docker image
 resource "docker_image" "app_image" {
-  count = (var.mode == "image_only" || var.mode == "full") ? 1 : 0
+  count = var.mode == "image_only" || var.mode == "full" ? 1 : 0
 
-  name = "${var.app_name}:${var.app_image_tag}"
+  name = var.image_tag
+
   build {
-    context    = var.build_context
-    dockerfile = "Dockerfile"
+    context    = var.build_context_path
+    dockerfile = var.dockerfile_path
+    tag        = [var.image_tag]
   }
-  # Trigger rebuild if Dockerfile or build context changes
+
+  # Triggers to rebuild the image if Dockerfile or 'dist' directory contents change.
+  # 'fileset' recursively finds all files in 'dist' and their MD5 hashes are joined
+  # to form a single trigger value. This ensures that any change within 'dist' or
+  # to the Dockerfile itself will cause a rebuild.
   triggers = {
-    dir_checksum = filechecksum("${var.build_context}/Dockerfile")
-    # If other files in build context should trigger a rebuild, add their checksums here
-    # For instance, if './dist' changes, it should trigger a rebuild.
-    # However, 'dist' is often part of the build context and its changes are detected by Docker build itself.
+    dockerfile_hash = filemd5("${var.build_context_path}/${var.dockerfile_path}")
+    dist_content_hash = join("-", [for f in fileset("${var.build_context_path}/dist", "**") : filemd5("${var.build_context_path}/dist/${f}")])
   }
 }
 
-# Docker Container Resource
-# Conditionally runs the Docker container based on the 'mode' variable.
+# Resource to run the Docker container
 resource "docker_container" "app_container" {
-  count = (var.mode == "container_only" || var.mode == "full") ? 1 : 0
+  count = var.mode == "container_only" || var.mode == "full" ? 1 : 0
 
-  name  = "${var.app_name}-container"
-  image = var.mode == "container_only" ? var.pre_built_image_full_name : docker_image.app_image[0].name
-  
+  name  = var.container_name
+  image = var.mode == "container_only" ? var.image_name : docker_image.app_image[0].name
+
   ports {
     internal = var.container_port
     external = var.host_port
   }
 
-  # Ensure the container is restarted if the Docker image changes
-  # (only if we are building the image in this run)
-  # This is implicitly handled by `docker_image.app_image[0].name` causing recreation
-  # or if `pre_built_image_full_name` is updated and applied.
-  restart = "on-failure"
+  # Respects the CMD in the Dockerfile: CMD ["http-server", "/app/html", "-p", "8080"]
+  # No explicit command needed unless overriding.
 
-  # Remove the container when Terraform destroys it.
-  # This is good practice for development environments.
-  rm = true
+  # Link the container to the image build, if the image is built by Terraform.
+  # The depends_on ensures the image is ready before the container attempts to use it.
+  dynamic "depends_on" {
+    for_each = var.mode == "full" ? [1] : []
+    content {
+      value = [docker_image.app_image[0].id]
+    }
+  }
 
-  # Health check (optional, but good practice)
-  # healthcheck {
-  #   test     = ["CMD", "curl", "-f", "http://localhost:${var.container_port}"]
-  #   interval = "5s"
-  #   timeout  = "3s"
-  #   retries  = 3
-  #   start_period = "5s"
-  # }
+  restart = "always"
 }
