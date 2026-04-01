@@ -1,35 +1,29 @@
-variable "docker_image_name" {
-  description = "The name and tag for the Docker image (e.g., my-app:latest)."
+variable "app_name" {
+  description = "The name of the application."
   type        = string
-  default     = "my-application:latest"
+  default     = "my-app"
 }
 
-variable "docker_container_name" {
-  description = "The name for the Docker container."
+variable "image_tag" {
+  description = "Tag for the Docker image."
   type        = string
-  default     = "my-application-container"
+  default     = "latest"
 }
 
 variable "container_port" {
-  description = "The internal port on which the application inside the container listens."
+  description = "The internal port the application listens on inside the Docker container."
   type        = number
-  default     = 8080 # Common default for web applications
+  default     = 8080
 }
 
-variable "host_port" {
-  description = "The port on the host machine to map to the container's internal port."
+variable "staging_host_port" {
+  description = "The host port to map to the staging container's internal port."
   type        = number
-  default     = 8080 # Example: map to the same port on the host
+  default     = 8081 # Common practice to use different ports for local environments
 }
 
-variable "dockerfile_context" {
-  description = "The path to the build context directory for the Docker image. This directory should contain the Dockerfile and all files needed for the build (e.g., the './dist' folder created by CI). Relative to where 'terraform apply' is run."
-  type        = string
-  default     = "."
-}
-
-variable "dockerfile_name" {
-  description = "The name of the Dockerfile within the 'dockerfile_context'."
-  type        = string
-  default     = "Dockerfile"
+variable "production_host_port" {
+  description = "The host port to map to the production container's internal port."
+  type        = number
+  default     = 8080 # Standard HTTP port locally
 }
