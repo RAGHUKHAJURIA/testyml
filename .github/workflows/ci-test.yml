@@ -1,3 +1,6 @@
+```json
+{
+  "fixedWorkflow": "```yaml
 name: CI Tests
 
 on:
@@ -26,30 +29,47 @@ jobs:
         run: |
           set -e
 
-          echo "Checking for project type..."
+          echo \"Checking for project type...\"
 
+          # Use if/elif/else to ensure only one project type is processed
           if [ -f package.json ]; then
-            echo "Detected Node.js project — installing and running npm test"
+            echo \"Detected Node.js project — installing and running npm test\"
             npm ci || npm install
             npm test
-          fi
-
-          if [ -f requirements.txt ]; then
-            echo "Detected Python requirements.txt — installing and running pytest"
+          elif [ -f requirements.txt ]; then
+            echo \"Detected Python requirements.txt — installing and running pytest\"
             python -m pip install --upgrade pip
-            python -m pip install -r requirements.txt
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            # Explicitly install pytest as it might not be in requirements.txt or installed by default
+            pip install pytest
             pytest
-          fi
-
-          if [ -f pyproject.toml ]; then
-            echo "Detected Python pyproject.toml — installing package and running pytest"
+          elif [ -f pyproject.toml ]; then
+            echo \"Detected Python pyproject.toml — installing package and running pytest\"
             python -m pip install --upgrade pip
-            python -m pip install .
+            python -m venv .venv
+            source .venv/bin/activate
+            # pip install . installs the package and its dependencies listed in pyproject.toml
+            pip install .
+            # Explicitly install pytest as it might be a dev dependency not installed by pip install .
+            pip install pytest
             pytest
-          fi
-
-          if [ ! -f package.json ] && [ ! -f requirements.txt ] && [ ! -f pyproject.toml ]; then
-            echo "No recognized test files found (package.json, requirements.txt, pyproject.toml)."
-            echo "If this repository uses a different test command, update .github/workflows/ci-test.yml accordingly."
+          else
+            echo \"No recognized test files found (package.json, requirements.txt, pyproject.toml).\"
+            echo \"If this repository uses a different test command, update .github/workflows/ci-test.yml accordingly.\"
             exit 1
           fi
+```",
+  "explanation": "The error log `Error: Process completed with exit code 1. Syntax error in line 14.` is misleading. When referring to shell scripts within GitHub Actions `run` blocks, 'line 14' typically refers to the 14th *effective line of the shell script content itself* (after `set -e` and blank lines). In the original script, this would be `python -m pip install -r requirements.txt`.\n\nThe 'syntax error' was likely an abstraction for a runtime error or a command failure rather than a literal shell syntax issue in `if` statements or `pip` commands. The actual problems identified and fixed are:\n\n1.  **Logical Flaw (Independent `if` statements):** The original workflow used multiple independent `if` statements. This meant that if a repository contained files for more than one project type (e.g., both `package.json` and `requirements.txt`), *all* matching blocks would execute sequentially. This is usually undesirable as it can lead to environment conflicts, redundant installations, or tests failing in unexpected ways (e.g., Python tests trying to run after Node.js commands have altered the environment, or vice-versa).\n2.  **Missing `pytest` Installation:** In the Python-specific blocks, `pytest` was assumed to be available. However, `python -m pip install -r requirements.txt` only installs what's listed in that file, and `python -m pip install .` installs the package itself and its direct dependencies. `pytest` is often a development dependency and might not be included in these standard installations. If `pytest` was not installed, the `pytest` command would fail with a 'command not found' error, causing the step to exit with code 1 due to `set -e`.\n3.  **Lack of Python Virtual Environment:** The original script installed Python packages directly into the environment provided by `actions/setup-python`. While functional, it's best practice in CI/CD to use a virtual environment (`venv`) to isolate dependencies, prevent conflicts with other tools or system packages, and ensure a clean, reproducible build environment.\n\n**Fixes Implemented:**\n\n*   **`if/elif/else` Structure:** The conditional logic has been refactored to an `if/elif/else` chain. This ensures that only the first detected project type's installation and test commands are executed, providing a clear, mutually exclusive, and predictable workflow.\n*   **Explicit `pytest` Installation:** `pip install pytest` has been explicitly added to both Python-related `elif` blocks. This guarantees that `pytest` is installed and available before the `pytest` command is invoked, preventing 'command not found' errors.\n*   **Python Virtual Environments:** `python -m venv .venv` and `source .venv/bin/activate` have been added to the Python blocks. This creates and activates an isolated Python virtual environment, ensuring all Python dependencies are installed locally to the project, improving reproducibility and preventing global environment pollution.",
+  "preventiveMeasures": [
+    "**Use `if/elif/else` for mutually exclusive conditions:** Always structure conditional logic using `if/elif/else` when only one code path should be executed based on a condition (e.g., detecting a single project type).",
+    "**Explicitly install all required tools:** Do not assume development or testing tools (like `pytest`, `eslint`, etc.) are pre-installed or will be pulled in by dependency managers for runtime. Explicitly install them in your workflow if they are needed for a specific step.",
+    "**Employ virtual environments for Python:** Always use `python -m venv` and activate it for Python projects in CI/CD. This isolates dependencies, prevents conflicts, and ensures a clean, reproducible environment.",
+    "**Validate workflow YAML with a linter:** Use a YAML linter (e.g., built-in IDE features, online linters, or `yamllint`) to catch subtle syntax or formatting issues before pushing, even if they don't produce obvious errors.",
+    "**Test workflow changes in a branch:** Always develop and test workflow changes in a feature branch or pull request first, rather than pushing directly to the main branch.",
+    "**Break down complex `run` scripts:** For very long or complex `run` blocks, consider breaking them down into multiple `steps` or even separate shell scripts for better readability, debugging, and error isolation. Each `step` creates its own shell, but environment variables and working directory persist.",
+    "**Add comprehensive logging:** Use `echo` statements throughout your scripts to log progress, especially during conditional logic or dependency installations, which can help pinpoint where an issue occurs when error messages are vague."
+  ]
+}
+```
