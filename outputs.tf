@@ -1,9 +1,17 @@
 output "container_url" {
-  description = "URL to access the running Docker container locally."
-  value       = "http://localhost:${docker_container.static_web_container.ports[0].external}"
+  description = "The URL to access the deployed Docker container."
+  value       = try(
+    "http://localhost:${docker_container.app_container[0].ports[0].external}",
+    "Container not deployed in this mode (mode: ${var.mode})"
+  )
+  # The sensitive flag can be used if the URL contains sensitive information, though unlikely for localhost.
+  # sensitive = true
 }
 
-output "image_id" {
-  description = "The ID of the built Docker image."
-  value       = docker_image.static_web_app.id
+output "image_name" {
+  description = "The full name of the Docker image that was built or would be used."
+  value = var.mode == "container_only" ? var.pre_built_image_full_name : try(
+    docker_image.app_image[0].name,
+    "Image not built in this mode (mode: ${var.mode})"
+  )
 }
