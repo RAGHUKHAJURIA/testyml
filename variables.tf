@@ -8,38 +8,44 @@ variable "mode" {
   }
 }
 
-variable "app_name" {
-  description = "The base name for the application image and container."
+variable "image_name" {
+  description = "Name of the Docker image to run when mode is 'container_only'."
   type        = string
-  default     = "my-node-web-app"
+  default     = "my-app:latest"
 }
 
-variable "app_image_tag" {
-  description = "The tag for the Docker image when built."
+variable "image_tag" {
+  description = "Tag for the Docker image to be built (e.g., 'my-app:latest')."
   type        = string
-  default     = "latest"
+  default     = "my-app:latest"
 }
 
-variable "pre_built_image_full_name" {
-  description = "The full name (including tag) of a pre-built Docker image to use when mode is 'container_only'."
+variable "container_name" {
+  description = "Name for the Docker container."
   type        = string
-  default     = "my-node-web-app:latest" # Example: Must exist in your Docker daemon or a configured registry.
+  default     = "my-app-container"
 }
 
 variable "container_port" {
-  description = "The internal port on which the application runs inside the container (from Dockerfile EXPOSE)."
+  description = "The port the application listens on inside the container."
+  type        = number
+  default     = 8080 # Matches EXPOSE 8080 in Dockerfile
+}
+
+variable "host_port" {
+  description = "The port on the host machine to map to the container's port."
   type        = number
   default     = 8080
 }
 
-variable "host_port" {
-  description = "The port on the host machine to map to the container's internal port."
-  type        = number
-  default     = 80
+variable "dockerfile_path" {
+  description = "Path to the Dockerfile, relative to build_context_path."
+  type        = string
+  default     = "Dockerfile"
 }
 
-variable "build_context" {
-  description = "The path to the Docker build context (directory containing Dockerfile and './dist')."
+variable "build_context_path" {
+  description = "Path to the Docker build context (e.g., '.' for current directory)."
   type        = string
   default     = "."
 }
