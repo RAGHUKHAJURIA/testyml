@@ -1,87 +1,48 @@
-```json
-{
-  "filesToUpdate": [
-    {
-      "path": ".github/workflows/main.yml",
-      "content": "name: CD\n\non:
-  push:
+name: CD Deployment
+
+on:
+  workflow_run:
+    workflows: ["CI Build, Test, and Lint"] # Name of the CI workflow
+    types:
+      - completed
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  deploy-staging:
-    name: Deploy to Staging
+  deploy:
     runs-on: ubuntu-latest
-    environment: 
-      name: staging
-      url: https://staging.example.com # Replace with your staging URL
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
+        # Needed if deployment scripts are within the repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Staging Environment
-        run: | 
-          echo \"Initiating deployment to staging...\"
-          # IMPORTANT: Replace the 'echo' and 'true' commands below with your actual deployment logic for staging.
-          # These commands must correctly deploy your application and exit with a non-zero status code on failure.
-          # GitHub Actions automatically fails a step if a 'run' command exits with a non-zero status code.
-          #
-          # Example for AWS S3:
-          #   aws s3 sync ./build s3://staging-bucket --delete
-          # Example for Kubernetes:
-          #   kubectl apply -f k8s/staging.yaml --record
-          # Example for Docker:
-          #   docker build -t my-app:staging .
-          #   docker push my-registry/my-app:staging
-          #   kubectl set image deployment/my-app my-app=my-registry/my-app:staging -n my-namespace
-          
-          # Placeholder for actual deployment command.
-          # The 'true' command below always succeeds. Replace it with your real deployment command.
-          true 
-          
-          echo \"Successfully deployed to staging!\"
+      - name: Download build artifact
+        # This step downloads the artifact uploaded by the CI workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: project-build-artifact
+          path: ./dist # Path where the artifact will be extracted
 
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: deploy-staging # Ensure staging deployment is successful first
-    environment:
-      name: production
-      url: https://www.example.com # Replace with your production URL
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Production Environment
+      - name: Deploy to environment (Placeholder)
+        # Replace this with your actual deployment steps
         run: |
-          echo \"Initiating deployment to production...\"
-          # IMPORTANT: Replace the 'echo' and 'true' commands below with your actual deployment logic for production.
-          # These commands must correctly deploy your application and exit with a non-zero status code on failure.
-          # GitHub Actions automatically fails a step if a 'run' command exits with a non-zero status code.
+          echo "Deploying project artifacts to target environment..."
+          echo "Artifacts are available in the ./dist directory."
+          echo "Example: Deploy to AWS S3, Azure App Service, Kubernetes, etc."
+          # Add actual deployment commands here, e.g.:
+          # aws s3 sync ./dist s3://your-bucket-name --delete
+          # az webapp deploy --resource-group YOUR_RG --name YOUR_APP --src-path ./dist
+          # kubectl apply -f ./dist/kubernetes-manifests/
           #
-          # Example for AWS S3:
-          #   aws s3 sync ./build s3://production-bucket --delete
-          # Example for Kubernetes:
-          #   kubectl apply -f k8s/production.yaml --record
-          # Example for Docker:
-          #   docker build -t my-app:production .
-          #   docker push my-registry/my-app:production
-          #   kubectl set image deployment/my-app my-app=my-registry/my-app:production -n my-namespace
-          
-          # Placeholder for actual deployment command.
-          # The 'true' command below always succeeds. Replace it with your real deployment command.
-          true
-          
-          echo \"Successfully deployed to production!\""
-    }
-  ],
-  "explanation": "The primary issue is that the provided `CI ERROR LOGS` are corrupted and unreadable, making it impossible to identify the specific cause of the pipeline failure. The garbled text contains references to job steps like 'Deploy to Production', 'Set up job', and 'Checkout code', indicating the failure occurred within the `deploy-production` job, but the precise error cannot be diagnosed.\n\nSince the provided workflow YAML uses `echo` commands and `true` (which always succeeds) as placeholders for actual deployment logic, the pipeline as written *should not* fail due to these commands. If a failure occurred, it likely stemmed from:\n1.  **Actual deployment commands (not shown in this YAML) that were previously in place and failed.**\n2.  An issue with the GitHub Actions runner environment itself, or the `actions/checkout@v4` action.\n3.  Problems with environment configuration or access that prevent even basic commands from running.\n\nWithout readable logs or actual deployment commands, a specific bug fix is impossible. The modifications to the workflow YAML primarily involve:\n*   Adding explicit comments within the `run` steps to clarify that the current commands are placeholders.\n*   Providing examples of what real deployment commands might look like, emphasizing the need to replace `true` with actual deployment logic.\n*   Highlighting that robust deployment commands should naturally exit with a non-zero status on failure, which GitHub Actions will interpret as a step failure.",
-  "preventiveMeasures": [
-    "**Ensure CI/CD logs are correctly captured and accessible:** Investigate why the error logs were corrupted/unreadable. This is crucial for future debugging.",
-    "**Implement actual deployment commands:** Replace the placeholder `true` and `echo` commands with the real deployment logic for both staging and production environments (e.g., `aws s3 sync`, `kubectl apply`, `docker build/push`).",
-    "**Configure cloud provider CLIs and authentication:** Ensure the GitHub Actions runner has the necessary tools (e.g., `aws cli`, `kubectl`, `docker`) installed and is properly authenticated to your cloud provider or container registry.",
-    "**Add comprehensive error handling and logging:** For complex deployment scripts, ensure they include error handling and output meaningful logs that can pinpoint issues.",
-    "**Validate environment configurations:** Double-check that `environment` variables, secrets, and permissions are correctly configured in GitHub for both `staging` and `production` environments."
-  ]
-}
-```
+          # Example using environment variables for secrets:
+          # echo "Deploying with access key ${{ secrets.AWS_ACCESS_KEY_ID }}"
+          # echo "Deploying to stage ${{ vars.DEPLOYMENT_STAGE }}"
+          #
+          # For a more complex deployment, consider breaking this into multiple jobs
+          # for different environments (e.g., 'deploy-staging', 'deploy-production')
+          # with appropriate environment protection rules and approvals.
