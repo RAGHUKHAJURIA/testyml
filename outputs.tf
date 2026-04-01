@@ -1,19 +1,29 @@
-output "container_id" {
-  description = "The ID of the deployed Docker container."
-  value       = docker_container.app_container.id
+output "staging_container_id" {
+  description = "The ID of the local Docker staging container."
+  value       = docker_container.app_staging.id
 }
 
-output "container_name" {
-  description = "The name of the deployed Docker container."
-  value       = docker_container.app_container.name
+output "staging_container_name" {
+  description = "The name of the local Docker staging container."
+  value       = docker_container.app_staging.name
 }
 
-output "container_ip_address" {
-  description = "The IP address of the deployed Docker container."
-  value       = docker_container.app_container.ip_address
+output "staging_access_url" {
+  description = "URL to access the staging application locally."
+  value       = "http://localhost:${var.staging_host_port}"
 }
 
-output "host_access_url" {
-  description = "The URL to access the application on the host machine."
-  value       = "http://localhost:${docker_container.app_container.ports[0].external}"
+output "production_container_id" {
+  description = "The ID of the local Docker production container.""
+  value       = docker_container.app_production.id
+}
+
+output "production_container_name" {
+  description = "The name of the local Docker production container."
+  value       = docker_container.app_production.name
+}
+
+output "production_access_url" {
+  description = "URL to access the production application locally."
+  value       = "http://localhost:${var.production_host_port}"
 }
