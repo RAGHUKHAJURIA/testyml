@@ -1,12 +1,17 @@
+```json
+{
+  "fixedWorkflow": "```yaml
 name: CD Deploy with Terraform
 
 on:
   workflow_run:
-    workflows: ["CI/CD Build & Push Docker"]
+    workflows: [\"CI/CD Build & Push Docker\"]
     types:
       - completed
-    branches:
-      - main # Only deploy main branch pushes
+    # Removed branches filter from on: workflow_run.
+    # The branch check is now handled explicitly at the job level for better debuggability and clarity.
+    # branches:
+    #   - main
 
 env:
   TF_WORKING_DIR: . # Assuming main.tf, variables.tf are at root
@@ -14,7 +19,8 @@ env:
 jobs:
   deploy:
     # This job runs only if the 'CI/CD Build & Push Docker' workflow completed successfully
-    if: github.event.workflow_run.conclusion == 'success'
+    # AND if that workflow ran on the 'main' branch.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,10 +46,10 @@ jobs:
             });
 
             // Find the artifact named 'docker_image_tag'
-            const matchArtifact = artifacts.data.artifacts.filter((artifact) => artifact.name == "docker_image_tag")[0];
+            const matchArtifact = artifacts.data.artifacts.filter((artifact) => artifact.name == \"docker_image_tag\")[0];
 
             if (!matchArtifact) {
-              core.setFailed("No 'docker_image_tag' artifact found from the CI workflow. Deployment aborted.");
+              core.setFailed(\"No 'docker_image_tag' artifact found from the CI workflow. Deployment aborted.\");
               return;
             }
 
@@ -58,7 +64,7 @@ jobs:
             const fs = require('fs');
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/docker_image_tag.zip`, Buffer.from(download.data));
             core.setOutput('artifact_downloaded', 'true');
-            console.log("Downloaded artifact to docker_image_tag.zip");
+            console.log(\"Downloaded artifact to docker_image_tag.zip\");
           result-encoding: string
 
       - name: Unzip Docker Image Tag artifact
@@ -67,8 +73,8 @@ jobs:
           unzip docker_image_tag.zip -d extracted_artifact
           # The artifact contains a file named 'docker_image_tag.txt' with the full image tag
           FULL_DOCKER_IMAGE_TAG=$(cat extracted_artifact/docker_image_tag.txt)
-          echo "DOCKER_IMAGE_TAG=$FULL_DOCKER_IMAGE_TAG" >> "$GITHUB_ENV"
-          echo "Extracted Docker Image Tag: $FULL_DOCKER_IMAGE_TAG"
+          echo \"DOCKER_IMAGE_TAG=$FULL_DOCKER_IMAGE_TAG\" >> \"$GITHUB_ENV\"
+          echo \"Extracted Docker Image Tag: $FULL_DOCKER_IMAGE_TAG\"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -79,7 +85,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.x.x # Use a specific version, e.g., 1.5.7
+          terraform_version: 1.6.x # Pinned to a specific minor version for stability
 
       - name: Terraform Init
         id: init
@@ -94,21 +100,27 @@ jobs:
       - name: Terraform Plan
         id: plan
         # Pass the extracted Docker image tag as a Terraform variable
-        run: terraform plan -no-color -var="image_tag=${{ env.DOCKER_IMAGE_TAG }}" -out="tfplan"
+        run: terraform plan -no-color -var=\"image_tag=${{ env.DOCKER_IMAGE_TAG }}\" -out=\"tfplan\"
         working-directory: ${{ env.TF_WORKING_DIR }}
-        env:
-          # Optionally pass AWS credentials if not using OIDC (less secure)
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        # Removed redundant AWS credentials. 'configure-aws-credentials' action handles this.
+        # env:
+        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        #   AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Terraform Apply
         id: apply
-        # Apply only on pushes to the main branch
-        if: github.ref == 'refs/heads/main' && github.event.workflow_run.head_branch == 'main'
-        run: terraform apply -auto-approve "tfplan"
+        # Apply only if the triggering workflow ran on the main branch.
+        # This is already covered by the job's 'if' condition, but kept for explicit control.
+        if: github.event.workflow_run.head_branch == 'main'
+        run: terraform apply -auto-approve \"tfplan\"
         working-directory: ${{ env.TF_WORKING_DIR }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        # Removed redundant AWS credentials. 'configure-aws-credentials' action handles this.
+        # env:
+        #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        #   AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+```",
+  "explanation": "The error log `Auto-Detected via Orchestrator` is extremely generic and typically indicates a fundamental issue with the workflow's trigger (`on:` event) or its initial parsing by GitHub Actions, preventing it from even starting correctly or providing more detailed logs. For `workflow_run` events, subtle misconfigurations of the `branches` filter can sometimes lead to this kind of uninformative error.\n\nHere's a breakdown of the fixes:\n\n1.  **Moved `branches` filter from `on: workflow_run` to job-level `if` condition**: This is the primary fix addressing the vague orchestrator error. While `branches` is a valid filter for `workflow_run`, it can sometimes prevent the workflow from being initiated or tracked in a way that generates clear error messages if the condition isn't met perfectly. By removing `branches: - main` from the `on:` trigger and adding `&& github.event.workflow_run.head_branch == 'main'` to the `deploy` job's `if` condition, the workflow will now always trigger when the parent workflow (`CI/CD Build & Push Docker`) completes. However, the `deploy` job itself will only run (or be explicitly marked as 'skipped' in the UI) if the triggering workflow ran on the `main` branch and completed successfully. This provides more visibility and makes debugging easier than a silent failure or cryptic orchestrator message.\n\n2.  **Removed redundant AWS credentials from Terraform `env` blocks**: The `aws-actions/configure-aws-credentials@v4` action, when used for OIDC, automatically sets temporary `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` as environment variables. Explicitly setting these again in the `env` blocks of the `Terraform Plan` and `Terraform Apply` steps is redundant and potentially problematic. If the secrets were empty or incorrectly configured, they could override the OIDC-generated temporary credentials, leading to authentication issues. Removing these `env` entries ensures OIDC authentication works as intended.\n\n3.  **Refined Terraform version specification**: Changed `terraform_version: 1.x.x` to `1.6.x` (or a similar specific minor version). While `1.x.x` instructs the `setup-terraform` action to use the latest patch of the latest minor version for Terraform 1, pinning to a specific minor version (e.g., `1.6.x` for the latest patch in the `1.6` series) offers better stability and predictability in a CD pipeline, preventing unexpected behavior if a new minor version introduces breaking changes or deprecations.\n\n4.  **Simplified `Terraform Apply` step `if` condition**: The original condition `if: github.ref == 'refs/heads/main' && github.event.workflow_run.head_branch == 'main'` was slightly redundant. With the job-level `if` now ensuring `github.event.workflow_run.head_branch == 'main'`, the `github.ref` check for the current workflow run's branch is also implicitly handled (as `github.ref` in `workflow_run` context refers to the branch of the triggering workflow). The step condition was simplified to `if: github.event.workflow_run.head_branch == 'main'` for clarity and to retain an explicit safeguard at the apply step, even if the job's `if` provides the primary gatekeeping."
+}
+```
