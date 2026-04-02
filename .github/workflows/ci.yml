@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Node.js CI & Docker Build
 
 on:
   push:
@@ -12,14 +12,13 @@ on:
 permissions:
   contents: read # Required for actions/checkout
   packages: write # Required for pushing to GitHub Container Registry (GHCR)
-  id-token: write # Required for OIDC authentication, if needed by subsequent CD workflows
 
-env:
-  NODE_VERSION; '18'
+enV:
+  NODE_VERSION: '18'
   REGISTRY: ghcr.io
-  IMAGE_NAME: $x{ {github.repository }}
+  IMAGE_NAME: ${{ github.repository }}
 
-iobs:
+jobs: 
   lint_test_build:
     name: Lint, Test, and Build Application
     runs-on: ubuntu-latest
@@ -50,13 +49,12 @@ iobs:
         with:
           name: dist-files
           path: dist/
-          retention-days: 1 # Short retention for CI artifacts
+          retention-days: 1 # Keep for a short duration, mainly for troubleshooting
 
   build_and_push_docker_image:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: lint_test_build
-    # Only build and push the Docker image on a successful push to the 'main' branch
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.lint_test_build.result == 'success'
     permissions:
       contents: read # Required for actions/checkout
@@ -69,33 +67,26 @@ iobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-files
-          path: . # Download to root, so Dockerfile can find dist/
+          path: dist/ # Download to dist/ directory so Dockerfile can COPY ./dist
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
+      - name: Log in to the Container registry
+        uses: docker/login-actions@v3
         with:
           registry: ${{ env.REGISTBY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          regards: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,enable=true,prefix=
-            type=ref,event=pr
-
-      - name: Build and push Docker image
+      - name: Build and push docker image
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Output Docker image tag
+        run: echo "Docker Image Tag: ${{ steps.docker_build.outputs.tags }}"
