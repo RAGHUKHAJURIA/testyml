@@ -1,1 +1,162 @@
-bmFtZTogVGVycmFmb3JtIENEIChEZXBsb3kgdG8gQ2xvdWQpCgphbi8KCnhhY2tiYWNrcm91bmQ6CiAgd29ya2Zsb3dfcnVuOgogICAgd29ya2Zsb3dzOiBbIk5vZGUuanMgQ0kiXSAjIE5hbWUgb2YgdGhlIENJCB3b3JrZmxvdzsgbXVzdCBtYXRjaCB0aGUgJ25hbWUnIGluIGNpLnltbAogICAgdHlwZXM6IFtjb21wbGV0ZWRdCiAgICBicmFuY2hlczoKICAgICAgLVwgbWFpblwiCiAgd29ya2Zsb3dfZGlzcGF0Y2g6ICMgQWxsb3dzIG1hbnVhbCB0cmlnZ2VyCgpwZXJtaXNzaW9uczoKICBjb250ZW50czogcmVhZCAjIFJlcXVpcmVkIGZvciBhY3Rpb25zL2NoZWNrb3V0CiAgcHVsbC1yZXF1ZXN0czogd3JpdGUgIyBPcHRpb25hbCwgZm9yIFBSIHN0YXR1cyB1cGRhdGVzIChlLmcuLCBUZXJyYWZvcm0gcGxhbiBjb21tZW50cykKICBpZC10b2tlbjogd3JpdGUgIyBSZXF1aXJlZCBmb3IgT0lEQyBhdXRoZW50aWNhdGlvbiB3aXRoIEFXUyAob3Igb3RoZXIgY2xvdWQpCgplbnY6CiAgQVdTX1JFR0lPTjogdXMtZWFzdC0xICMgQWRqdXN0IHRvIHlvdXIgQVdTIHJlZ2lvbgogICMgVGhlIGltYWdlIHRhZyBmb3IgQ0Qgc2hvdWxkIGNvbWUgZnJvbSB0aGUgU0hBIG9mIHRoZSB3b3JrZmxvX3J1biB0aGF0IHRyaWdnZXJlZCB0aGlzLgogIElNQUdFX0ZVTExfVEFHOiBnaGNyLmlvLyR7eyBnaXRodWIucmVwb3NpdG9yeSB9fToke3sgZ2l0aHViLmV2ZW50LndvcmtmbG93X3J1bi5oZWFkX3NoYSB9fQogIFRFUlJBRk9STV9WRVJTSU9OOiAnMS54LngnICMgT3IgYSBzcGVjaWZpYyB2ZXJzaW9uIGxpa2UgJzEuNS43JwoKaW9iczogCiAgdGVycmFmb3JtX2FwcGx5X3N0YWdpbmc6CiAgICBuYW1lOiBBcHBseSBUZXJyYWZvcm0gQ2hhbmdlcyB0byBTdGFnaW5nCiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBlbnZpcm9ubWVudDoKICAgICAgbmFtZTogc3RhZ2luZwogICAgICB1cmw6IGh0dHBzOi8vc3RhZ2luZy5leGFtcGxlLmNvbSAjIFJlcGxhY2Ugd2l0aCB5b3VyIHN0YWdpbmcgVVJMCiAgICBpZjogZ2l0aHViLmV2ZW50LndvcmtmbG93X3J1bi5jb25jbHVzaW9uID09ICdzdWNjZXNzJwogICAgc3RlcHM6CiAgICAgIC0gbmFtZTogQ2hlY2tvdXQgcmVwb3NpdG9yeQogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogQ29uZmlndXJlIEFXUyBjcmVkZW50aWFscyB3aXRoIE9JREMKICAgICAgICB1c2VzOiBhd3MtYWN0aW9ucy9jb25maWd1cmUtYXdzLWNyZWRlbnRpYWxzQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIHJvbGUtY2hhbW1lZTogYXJuOmF3czppYW06OjEyMzQ1Njc4OTAxMjpyb2xlL2dpdGh1Yi1hY3Rpb25zLXN0YWdpbmctcm9sZSAjIFJFUElBIFlPVSB3aXRoIHlvdXIgYWN0dWFsIElBTSBSb2xlIEFSbgogICAgICAgICAgYXdzLXJlZ2lvbjogJHt7IGVudi5BV1NfUkVHSU9OIH19CgogICAgICAtIG5hbWU6IFNldCB1cCBUZXJyYWZvcm0KICAgICAgICB1c2VzOiBoYXNoaWNvcnAvc2V0dXAtdGVycmFmb3JtQHYyCiAgICAgICAgd2l0aDoKICAgICAgICAgIHRlcnJhZm9ybV92ZXJzaW9uOiAke3sgZW52LlRFUlJBRk9STV9WRVJTSU9OIH19CgogICAgICAtIG5hbWU6IFRlcnJhZm9ybSBJbml0CiAgICAgICAgcnVuOiB0ZXJyYWZvcm0gaW5pdAoKICAgICAgLwgbmFtZTogVGVycmFmb3JtIFZhbGlkYXRlCiAgICAgICAgcnVuOiB0ZXJyYWZvcm0gdmFsaWRhdGUKCiAgICAgIC0gbmFtZTogVGVycmFmb3JtIFBsYW4KICAgICAgICBydW46IHRlcnJhZm9ybSBwbGFuIC1pbnB1dD1mYWxzZSAtdmFyICJpbWFnZV90YWc9JHt7IGVudi5JTUFHRV9GVUxMX1RBRyB9fSIgLW91dD10ZnBsYW4KCiAgICAgIC0gbmFtZTogVGVycmFmb3JtIEFwcGx5CiAgICAgICAgcnVuOiB0ZXJyYWZvcm0gYXBwbHkgLWF1dG8tYXBwcm92ZSB0ZnBsYW4KCiAgdGVycmFmb3JtX2FwcGx5X3Byb2R1Y3Rpb246CiAgICBuYW1lOiBBcHBseSBUZXJyYWZvcm0gQ2hhbmdlcyB0byBQcm9kdWN0aW9uCiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBlbnZpcm9ubWVudDoKICAgICAgbmFtZTogcHJvZHVjdGlvbgogICAgICB1cmw6IGh0dHBzOi8vd3d3LmV4YW1wbGUuY29tICMgUmVwbGFjZSB3aXRoIHlvdXIgcHJvZHVjdGlvbiBVSFQgCiAgICBuZWVkczogdGVycmFmb3JtX2FwcGx5X3N0YWdpbmcKICAgIGlmOiBnaXRodWIuZXZlbnQud29ya2Zsb3dfcnVuLmNvbmNsdXNpb24gPT0gJ3N1Y2Nlc3MnICMgQW5kIG9ubHkgaWYgdGhlIENJIXN1Y2NlZWRlZAogICAgc3RlcHM6CiAgICAgIC0gbmFtZTogQ2hlY2tvdXQgcmVwb3NpdG9yeQogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogQ29uZmlndXJlIEFXUyBjcmVkZW50aWFscyB3aXRoIE9JREMKICAgICAgICB1c2VzOiBhd3MtYWN0aW9ucy9jb25maWd1cmUtYXdzLWNyZWRlbnRpYWxzQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIHJvbGUtY2hhbW1lZTogYXJuOmF3czppYW06OjEyMzQ1Njc4OTAxMjpyb2xlL2dpdGh1Yi1hY3Rpb25zLXByb2R1Y3Rpb24tcm9sZSAjIFJFUElBIFlPVSB3aXRoIHlvdXIgYWN0dWFsIElBTSBSb2xlIEFSbgogICAgICAgICAgYXdzLXJlZ2lvbjogJHt7IGVudi5BV1NfUkVHSU9OIH19CgogICAgICAtIG5hbWU6IFNldCB1cCBUZXJyYWZvcm0KICAgICAgICB1c2VzOiBoYXNoaWNvcnAvc2V0dXAtdGVycmFmb3JtQHYyCiAgICAgICAgd2l0aDoKICAgICAgICAgIHRlcnJhZm9ybV92ZXJzaW9uOiAke3sgZW52LlRFUlJBRk9STV9WRVJTSU9OIH19CgogICAgICAtIG5hbWU6IFRlcnJhZm9ybSBJbml0CiAgICAgICAgcnVuOiB0ZXJyYWZvcm0gaW5pdAoKICAgICAgLSBuYW1lOiBUZXJyYWZvcm0gVmFsaWRhdGUKICAgICAgICBydW46IHRlcnJhZm9ybSB2YWxpZGF0ZQoKICAgICAgLSBuYW1lOiBUZXJyYWZvcm0gUGxhbgogICAgICAgIHJ1bjogdGVycmFmb3JtIHBsYW4gLWlucHV0PWZhbHNlIC12YXIgImltYWdlX3RhZz0ke3sgZW52LklNQUdFX0ZVTExfVEFHIH19IiAtb3V0PXRmcGxhbi1wcm9kCgogICAgICAtIG5hbWU6IFRlcnJhZm9ybSBBcHBseQogICAgICAgIHJ1bjogdGVycmFmb3JtIGFwcGx5IC1hdXRvLWFwcHJvdmUgdGZwbGFuLXByb2QK
+name: Terraform CD (Deploy to Cloud)
+
+an/
+  workflow_run:
+    workflows: ["Node.js CI & Docker Build"] # Name of the CI workflow; must match the 'name' in ci.yml
+    types: [completed]
+    branches:
+      - main
+  
+dermissions:
+  contents: read # Required for actions/checkout
+  id-token: write # Required for OIDC oathenathion with AWS
+
+env:
+  AWS_REGION: us-east-1 # Adjust to your AWS region
+  TERRAFORM_VERSION: '1.x.x' # Or a specific version like '1.5.7'
+
+   IMAGE_FULL_TAG: ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}
+
+jobs:
+  terraform_plan_staging:
+    name: Terraform Plan Staging
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: staging
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-staging-role # REPIACE with your actual IAM Role Arn
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAfORM_VERSION }}
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan.out -var="image_full_tag=${{ env.IMAGE_FULL_TAG }}"
+
+      - name: Upload Terraform Staging Plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-staging
+          path: tfplan.out
+          retention-days: 1
+
+  terraform_apply_staging:
+    name: Terraform Apply Staging
+    runs-on: ubuntu-latest
+    needs: terraform_plan_staging
+    if: github.event.workflow_run.conclusion == 'success' && needs.terraform_plan_staging.result == 'success'
+    environment:
+      name: staging
+      url: https://staging.example.com # Replace with your staging URL
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Terraform Plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-staging
+          path: .
+ 
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-staging-role # REPLACE with your actual IAM Role Arn
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+ 
+      - name: Terraform Apply
+        run: terraform apply "tfplan.out"
+
+  terraform_plan_production:
+    name: Terraform Plan Production
+    runs-on: ubuntu-latest
+    needs: terraform_apply_staging
+    if: github.event.workflow_run.conclusion == 'success' && needs.terraform_apply_staging.result == 'success'
+    environment:
+      name: production
+    steps:
+      - name: Checkkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-production-role # REPLACE with your actual IAM Role Arn
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan-prod.out -var="image_full_tag=${{ env.IMAGE_FULL_TAG }}"
+ 
+      - name: Upload Terraform Production Plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-production
+          path: tfplan-prod.out
+          retention-days: 1
+
+  terraform_apply_production:
+    name: Terraform Apply Production
+    runs-on: ubuntu-latest
+    needs: terraform_plan_production
+    if: github.event.workflow_run.conclusion == 'success' && needs.terraform_plan_production.result == 'success'
+    environment:
+      name: production
+      url:\u https://www.example.com # Replace with your production URL
+    steps:
+      - name: Checkout repository
+        uses: actions/checkkout@v4
+
+      - name: Download Terraform Plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-production
+          path: .
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-production-role # REPLACE with your actual IAM Role Arn
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+ 
+      - name: Terraform Apply Production
+        run: terraform apply "tfplan-prod.out"
+ 
