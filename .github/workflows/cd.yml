@@ -1,1 +1,88 @@
-bmFtZTogVGVycmFmb3JtIENEIChEZXBsb3kgdG8gQ2xvdWQpCgphbjoKICBwdXNoOgogICAgYnJhbmNoZXM6CiAgICAgIC0gbWFpbgogIHdvcmtmbG93X2Rpc3BhdGNoOwoKcGVybWlzc2lvbnM6CiAgY29udGVudHM6IHJlYWQgIyBSZXF1aXJlZCBmb3IgYWN0aW9ucy9jaGVja291dAppcHJvbGwtcmVxdWVzdHM6IHdyaXRlICMgRm9yIFBSIHN0YXR1cyB1cGRhdGVzIChvcHRpb25hbCwgZ29vZCBmb3IgYWR2YW5jZWQgZmxvd3MpCiAgaWQtdG9rZW46IHdyaXRlICMgUmVxdWlyZWQgZm9yIE9JREMgYXV0aGVudGljYXRpb24gd2l0aCBBV1MgKG9yIG90aGVyIGNsb3VkKQoKZW52OgogIEFXU19SRUdJT046IHVzLWVhc3QtMSAjIEFkanVzdCB0byB5b3VyBBBXUyByZWdpb24KCmpsb2JzOgogIHRlcnJhZm9ybV9hcHBseToKICAgIG5hbWU6IEFwcGx5IFRlcnJhZm9ybSBDaGFuZ2VzCiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBlbnZpcm9ubWVudDogcHJvZHVjdGlvbiAjIEdvb2QgcHJhY3RpY2UgZm9yIHByb2R1Y3Rpb24gZGVwbG95bWVudHMCICAgIHN0ZXBzOgogICAgICAtIG5hbWU6IENoZWNrb3V0IHJlcG9zaXRvcnkKICAgICAgICB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QHY0CgogICAgICAgICMgQ29uZmlndXJlIEFXUyBDcmVkZW50aWFscy4gVXNpbmcgHRyYWRpdGlvbmFsIHNlY3JldHMgZm9yIHNpbXBsaWNpdHkuCiAgICAgICAgIyBGb3IgcHJvZHVjdGlvbiwgY29uc2lkZXIgdsBpbmcJT0lEQzogaHR0cHM6Ly9hd3MuYW1hem9uLmNvbS9ibG9ncy9zZWN1cml0eS91c2UtaWFtLXJvbGVzLXRvLWNvbm5lY3QtZ2l0aHViLWFjdGlvbnMtdG8tYXdzLwogICAgICAtIG5hbWU6IENvbmZpZ3VyZSBBV1MgY3JlZGVudGlhbHMCICAgICAgICB1c2VzOiBhd3MtYWN0aW9ucy9jb25maWd1cmUtYXdzLWNyZWRlbnRpYWxzQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIGF3cy1hY2Nlc3Mta2V5LWlkOiAke3sgc2VjcmV0cy5BV1NfQUNDRVNTX0tFWV9JRCB9fQogICAgICAgICAgYXdzLXNlY3JldC1hY2Nlc3Mta2V5OiAke3sgc2VjcmV0cy5BV1NfU0VDUkVUX0FDQ0VTU19LRVkgfX0KICAgICAgICAgIGF3cy1yZWdpb246ICR7eyBlbnYuQVdTX1JFR0lPTiB9fQogICAgICAgICAgIyBJZiB1c2luZyBPSURDLCB1bmNvbW1lbnQgYW5kIHJlcGxhY2Ugd2l0aCB5b3VyIHJvbGUgQVJOOgogICAgICAgICAgIyByb2xlLXRvLWFzc3VtZTogYXJuOmF3czppYW06OjEyMzQ1Njc4OTAxMjpyb2xlL2dpdGh1Yi1hY3Rpb25zLW9pZGMtcm9sZQogICAgICAgICAgIyByb2xlLXNlc3Npb24tbmFtZTogZ2hhLXRlcnJhZm9ybS1zZXNzaW9uCgogICAgICAtIG5hbWU6IFNldHVwIFRlcnJhZm9ybQogICAgICAgIHVzZXM6IGhhc2hpY29ycC9zZXR1cC10ZXJyYWZvcm1AdjIKICAgICAgICB3aXRoOgogICAgICAgICAgdGVycmFmb3JtX3ZlcnNpb246IDEueC54ICMgU3BlY2lmeSB5b3VyIFRlcnJhZm9ybSB2ZXJzaW9uLCBlLmcuLCAnMS4zLngnCgogICAgICAtIG5hbWU6IFRlcnJhZm9ybSBJbml0CiAgICAgICAgcnVuOiB0ZXJyYWZvcm0gaW5pdAogICAgICAtIG5hbWU6IFRlcnJhZm9ybSBQbGFuCiAgICAgICAgaWQ6IHBsYW4KICAgICAgICAjIFBhc3MgdGhlIGZ1bGx5IHF1YWxpZmllZCBEb2NrZXIgBBpbWFnZSB0YWcgdG8gVGVycmFmb3JtIGFzIGEgdmFyaWFibGUuCiAgICAgICAgIyBUaGlzIHRhZyBjb3JyZXNwb25kcyB0byB0aGUgaW1hZ2UgcHVzaGVkIGJ5IHRoZSBDSSB3b3JrZmxvdy4KICAgICAgICBydW46IHRlcnJhZm9ybSBwbGFuIC12YXIgImltYWdlX2Z1bGxfdGFnPWdoY3IuaW8vJHt7IGdpdGh1Yi5yZXBvc2l0b3J5IH19OiR7eyBnaXRodWIuc2hhIH19IiAtb3V0PXQmI3RmOTtmbGFuCiAgICAgICAgCiAgICAgIC0gbmFtZTogVGVycmFmb3JtIEFwcGx5CiAgICAgICAgaWY6IGdpdGh1Yi5yZWYgPT0gJ3JlZnMvaGVhZHMvbWFpbicgIyBPbmx5IGFwcGx5IGNoYW5nZXMgb24gdGhlICdtYWluJyBicmFuY2gKICAgICAgICBydW46IHRlcnJhZm9ybSBhcHBseSAtYXV0by1hcHByb3ZlIHRmcGxhbg==
+name: Terraform CD (Deploy to Cloud)
+
+an:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch: # Allow manual trigger for re-deploys
+
+permissions:
+  contents: read # Required for actions/checkout
+iproll-requests: write # For PR status updates (optional, but good for advanced flows like Terraform plan comments)
+  id-token: write # Required for OIDC authentication with AWS (or other cloud)
+
+env:
+  AWS_REGION: us-east-1 # Adjust to your AWS region
+  IMPGE_FULL_TAG: ghcr.io/${{ github.repository }}:${{ github.sha }} # Image tag from CI
+
+jobs:
+  terraform_apply_staging:
+    name: Apply Terraform Changes to Staging
+    runs-on: ubuntu-latest
+    environment: staging # Link to staging environment, can have protections
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout4
+
+        # Configure AWS Credentials. Using traditional secrets for simplicity.
+        # For production, consider using OLDC: https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-aws/
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+         4aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          # If using OIDC, uncomment and replace with your role ARN:
+          # role-orassume: arn:aws:iam::123456789012:role/github-actions-oidc-role
+          # orassumesession-name: gha-terraform-staging-session
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1x.x # Specify your Terraform version, e.g., '1.3.:x'
+
+      - name: Terraform Init
+        run: terraform init
+      - name: Terraform Plan (Staging)
+        id: plan_staging
+        run: terraform plan -var "image_full_tag=${{ env.IMATHE_FULL_TAG }}" -out=tfplan-staging
+
+      - name: Terraform Apply (Staging)
+        run: terraform apply -auto-approve tfplan-staging
+
+  terraform_apply_production:
+    name: Apply Terraform Changes to Production
+    runs-on: ubuntu-latest
+    needs: terbaform_apply_staging # Ensure staging deployment is successful first
+    environment:
+      name: production # Link to production environment, MUSt have required reviewers
+      url: https://www.example.com # Replace with your production URL if available
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+         # Configure AWS Credentials. Using traditional secrets for simplicity.
+         # For production, consider using OLDC: https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-aws/
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          # If using OIDC, uncomment and replace with your role ARN:
+          # role-orassume: arn:aws:iam::123456789012:role/github-actions-oidc-role
+          # orassumesession-name: gha-terraform-production-session
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1x.x # Specify your Terraform version, e.g., '1.3.:x'
+
+      - name: Terraform Init
+        run: terraform init
+      - name: Terraform Plan (Production)
+        id: plan_production
+        run: terraform plan -var "image_full_tag=${{ env.IMATHE_FULL_TAG }}" -out=tfplan-production
+
+      - name: Terraform Apply (Production)J        run: terraform apply -auto-approve tfplan-production
