@@ -1,5 +1,5 @@
 variable "mode" {
-  description = "Execution mode: 'image_only' to build the Docker image, 'container_only' to run a pre-built image, or 'full' to build and run the image and container."
+  description = "Determines whether to build the Docker image ('image_only'), run a pre-existing container ('container_only'), or perform both ('full')."
   type        = string
   default     = "full"
   validation {
@@ -9,15 +9,9 @@ variable "mode" {
 }
 
 variable "image_name" {
-  description = "The base name for the Docker image (e.g., 'my-dockerized-app')."
+  description = "The name of the Docker image to build, or to use if mode is 'container_only'."
   type        = string
-  default     = "my-dockerized-app"
-}
-
-variable "image_tag" {
-  description = "The tag for the Docker image (e.g., 'latest' or 'local')."
-  type        = string
-  default     = "local"
+  default     = "my-dockerized-app:latest"
 }
 
 variable "container_name" {
@@ -33,19 +27,19 @@ variable "container_port" {
 }
 
 variable "host_port" {
-  description = "The port on the host machine to map to the container's exposed port (e.g., 8080)."
+  description = "The host port to bind to the container's exposed port. Defaults to the same as container_port."
   type        = number
   default     = 8080
 }
 
-variable "build_context" {
-  description = "The path to the build context for the Docker image. Default is '.' (current directory)."
-  type        = string
-  default     = "."
-}
-
 variable "dockerfile_path" {
-  description = "The path to the Dockerfile within the build context. Default is 'Dockerfile'."
+  description = "The path to the Dockerfile relative to the build context."
   type        = string
   default     = "Dockerfile"
+}
+
+variable "build_context_path" {
+  description = "The path to the build context directory for Docker (e.g., where Dockerfile and source code reside)."
+  type        = string
+  default     = "."
 }
